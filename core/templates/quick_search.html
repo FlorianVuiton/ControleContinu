@@ -1,0 +1,51 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Recherche Rapide {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+          <div class="row">
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Recherche Rapide</h4>
+                  <!--<p class="card-category">Complete your profile</p>-->
+                </div>
+                <div class="card-body">
+                  <form action="{% url 'quick_search' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group {% if form.domain.errors %}has-warning has-feedback{% endif %}">
+                          {{ form }}
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-success pull-right">Lancer</button>
+                    <div class="clearfix"></div>
+                  </form>
+                </div>
+                <div>
+                  <ul>
+                  {% for key,values in quick_search_dict %}
+                    <li> {{ key }} </li>
+                      <ul>
+                      {% for value in values %}
+                        <li>{{value}}</li>
+                      {% endfor %}
+                      </ul>
+                  {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
