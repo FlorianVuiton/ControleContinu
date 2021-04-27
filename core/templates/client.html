@@ -1,0 +1,53 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+      <div class="col-lg-4 col-md-6 col-sm-6">
+      {% for client in clients %}
+        <div class="card card-stats">
+          <div class="card-header card-header-warning card-header-icon">
+            <div class="card-icon">
+              <i class="material-icons">emoji_people</i>
+            </div>
+            <p class="card-category">
+              <h2 style="color:black">Client :</h2>
+            </p>
+            <form action="{% url 'show_controle_continu' %}" method="POST">
+              {%csrf_token %}
+              <input type="hidden" name="client_id" value="{{ client.id_client }}">
+              <button type="submit" class="btn btn-success btn-round pull-right">{{ client.name_client }}</button>
+                <!--<a href="{% url 'show_controle_continu' %}" class="btn btn-info">
+                  <h3 class="card-title"> {{ client.name_client}}</h3>
+                </a>-->
+            </form>
+          </div>
+          <div class="card-footer">
+              <p> description : {{ client.description }}</p>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    </div>
+
+    
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+
+    });
+  </script>
+
+{% endblock javascripts %}
