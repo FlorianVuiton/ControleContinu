@@ -1,0 +1,3 @@
+redis-server
+celery -A core worker --loglevel=INFO --pool prefork 
+python3 manage.py runserver

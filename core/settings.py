@@ -20,7 +20,7 @@ DEBUG = config('DEBUG', cast=bool)
 # DEBUG = True
 
 # load production server from .env
-ALLOWED_HOSTS = ['localhost', '127.0.0.1'] #, config('SERVER', default='127.0.0.1')]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.130.99'] #, config('SERVER', default='127.0.0.1')]
 
 # Application definition
 
@@ -31,8 +31,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
+    'celery_progress',
     'debug_toolbar',
-    'app'  # Enable the inner app 
+    'app',  # Enable the inner app 
 ]
 
 MIDDLEWARE = [
@@ -83,7 +85,7 @@ DATABASES = {
         'PASSWORD': config('PASSWORD'),
         'HOST'  : config('HOST'),
         'PORT'  : config('PORT'),
-        'CONN_MAX_AGE' : 10, 
+        'CONN_MAX_AGE' : None, 
     }
 }
 
@@ -133,3 +135,12 @@ STATICFILES_DIRS = (
 )
 #############################################################
 #############################################################
+
+
+# celery
+CELERY_BROKER_URL = 'redis://localhost:6379'
+#CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+#CELERY_TASK_SERIALIZER = 'json'

@@ -26,3 +26,7 @@ staticfiles/*
 .vscode/symbols.json
 
 .env
+
+# redis
+*.rdb
+redis-stable/*

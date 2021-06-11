@@ -1,0 +1,13 @@
+.imgclient {
+border-width: 3px !important;
+border-color: #019e97 !important;
+}
+
+.nomclient {
+        font-weight: 700px;
+        color: #019e97 !important;
+}
+
+.card-body-client {
+        min-height: 0px !important;
+}

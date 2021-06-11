@@ -2,6 +2,8 @@
 
 {% block title %} Controle Continu {% endblock %} 
 
+{% load static %}
+
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
@@ -16,23 +18,36 @@
                 {%csrf_token %}
                 <div class="pull-right">
                   <div class="row">
-                    <button type="submit" class="btn btn-default" name="download_file_delta">
+                    <button type="submit" class="btn btn-sm" name="download_file_delta">
                       <i class="material-icons">file_download</i> Liste des delta
                     </button>
                   </div>
                   <div class="row">
-                    <button type="submit" class="btn btn-default" name="download_file_subdomain">
+                    <button type="submit" class="btn btn-sm" name="download_file_subdomain">
                       <i class="material-icons">file_download</i> Liste des sous-domaines
                   </button>
                   </div>
                   <div class="row">
-                    <button type="submit" class="btn btn-default" name="download_file_port">
+                    <button type="submit" class="btn btn-sm" name="download_file_port">
                       <i class="material-icons">file_download</i> Liste des ports ouvert
                     </button>
                   </div>
                 </div>
               </form>
             </div>
+          </div>
+          {% if  information != "" %}
+          <div class="row">
+            <div class="text-info text-center">
+              <h3> {{ information }} </h3>
+            </div>
+          </div> 
+          {% endif %} 
+          <div class='progress-wrapper'>
+            <div id='progress-bar' class='progress-bar' style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+          </div>
+          <div id="progress-bar-message" class="text-center">
+            <h3>En attente de lancement d'un scan Sublist3r ou Nmap...</h3>
           </div>
           <div class="row">
             <div class="col-md-8 offset-md-2">
@@ -65,9 +80,20 @@
                 </div>
               </div>
             </div>
+            <div class="col-md-2">
+              <span class="input-group-btn">
+                <form action="{% url 'show_controle_continu' %}" method="POST">
+                  {%csrf_token %}
+                  <button id="refresh" type="submit" class="btn btn-round btn-default">
+                    <i class="material-icons">refresh</i>
+                  </button>
+                  <input type="hidden" name="client_id" value="{{ client.id_client }}">
+                </form>    
+              </span>
+            </div>  
           </div>
           <div class="row">
-          <div class="col-lg-6 col-md-12">
+          <div class="col-lg-5 col-md-12">
             <div class="card">
               <div class="card-header card-header-tabs card-header-info">
                 <div class="nav-tabs-navigation">
@@ -76,19 +102,19 @@
                     <ul class="nav nav-tabs" data-tabs="tabs">
                       <li class="nav-item">
                         <a class="nav-link active" href="#delta" data-toggle="tab">
-                          <i class="material-icons">change_history</i> Liste de Delta
+                          <i class="material-icons">change_history</i> Liste Delta : {{ list_delta|length }}
                           <div class="ripple-container"></div>
                         </a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link" href="#base" data-toggle="tab">
-                          <i class="material-icons">playlist_add_check</i> Liste de référence
+                          <i class="material-icons">playlist_add_check</i> Liste Référence : {{ list_base|length }}
                           <div class="ripple-container"></div>
                         </a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link" href="#ban" data-toggle="tab">
-                          <i class="material-icons">cancel</i> Liste d'exclusion
+                          <i class="material-icons">cancel</i> Liste Exclusion : {{ list_ban|length }}
                           <div class="ripple-container"></div>
                         </a>
                       </li>
@@ -99,37 +125,63 @@
               <div class="card-body">
                 <div class="tab-content">
                   <div class="tab-pane active" id="delta">
-                    <table class="table">
-                      <tbody>
-                        {% for delta in list_delta %}
-                        <tr>
-                          <form action="{% url 'show_controle_continu' %}" method="POST">
-                            {%csrf_token %}
+                    <form action="{% url 'show_controle_continu' %}" method="POST">
+                      {%csrf_token %}
+                      <table class="table"> 
+                        <thead class="text-info">
+                          <th>Nom de l'asset</th>
+                          <th>Type</th>
+                          <th>Référence/Exclusion</th> 
+                        </thead>
+                        <tbody>
+                          {% for delta in list_delta %}
+                          <tr>
                             <td>{{ delta.name_asset }}</td>
+                            <td>{{ delta.data_type }}</td>
                             <td class="td-actions text-right">
-                              <button type="submit" rel="tooltip" title="Déplacer dans la liste de référence" name="to_list_base" value="{{ delta }}" onclick="md.showNotification_list('bottom','right', 'success', '{{ delta.name_asset }} déplacé dans la liste de référence')" class="btn btn-success btn-link btn-sm">
-                                <i class="material-icons">check</i>
-                              </button>
-                              <button type="submit" rel="tooltip" title="Déplacer dans la liste d'exclusion" name="to_list_ban" value="{{ delta }}" onclick="md.showNotification_list('bottom','right', 'danger', '{{ delta.name_asset }} déplacé dans la liste d\'exclusion)" class="btn btn-danger btn-link btn-sm">
-                                <i class="material-icons">close</i>
-                              </button>
+                              <div class="form-check form-check-radio form-check-inline">
+                                <label class="form-check-label">
+                                  <input class="form-check-input" type="radio" name="radio_{{ delta.id_asset}}" id="inlineRadio1" value="to_base">
+                                    <i style = "color:green;" class="material-icons">check</i>
+                                  <span class="circle">
+                                    <span class="check"></span>
+                                  </span>
+                                </label>
+                              </div>
+                              <div class="form-check form-check-radio form-check-inline">
+                                <label class="form-check-label">
+                                  <input class="form-check-input" type="radio" name="radio_{{ delta.id_asset}}" id="inlineRadio2" value="to_ban">
+                                    <i style = "color:red;" class="material-icons">close</i>
+                                  <span class="circle">
+                                    <span class="check"></span>
+                                  </span>
+                                </label>
+                              </div>
                             </td>
-                          </form>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
+                          </tr>
+                          {% endfor %}
+                        </tbody>   
+                      </table>
+                      <button type="submit" title="Changer les assets de liste" name="change_list" value="over" onclick="md.showNotification_list('bottom','right', 'success', 'Scan lancé')" class="btn btn-success pull-right">Valider les changements
+                      </button>
+                    </form>
                   </div>
                   <div class="tab-pane" id="base">
                     <table class="table">
+                      <thead class="text-info">
+                        <th>Nom de l'asset</th>
+                        <th>Type</th>
+                        <th>Vers liste d'exclusion</th> 
+                      </thead>
                       <tbody>
                         {% for base in list_base %}
                         <tr>
                           <form action="{% url 'show_controle_continu' %}" method="POST">
                             {%csrf_token %}
                             <td>{{ base.name_asset }}</td>
+                            <td>{{ base.data_type }}</td>
                             <td class="td-actions text-right">
-                              <button type="submit" rel="tooltip" title="Déplacer dans la liste d'exclusion" name="to_list_ban" value="{{ base }}" onclick="md.showNotification_list('bottom','right', 'danger', '{{ base.name_asset }} déplacé dans la liste de référence')" class="btn btn-danger btn-link btn-sm">
+                              <button type="submit" rel="tooltip" title="Déplacer dans la liste d'exclusion" name="to_list_ban" value="{{ base.id_asset }}" onclick="md.showNotification_list('bottom','right', 'danger', '{{ base.name_asset }} déplacé dans la liste de référence')" class="btn btn-danger btn-link btn-sm">
                                 <i class="material-icons">east</i>
                               </button>
                             </td>
@@ -139,21 +191,27 @@
                       </tbody>
                     </table>
                       <form action="{% url 'show_controle_continu' %}" method="POST">
-                        {%csrf_token %}  
-                        <button type="submit" title="Lancer un scan" name="dig_nmap" onclick="md.showNotification_list('bottom','right', 'success', 'Scan lancé')" class="btn btn-success pull-right">Lancer un Dig + Nmap depuis la liste de référence
-                        </button>
-                      </form>
+                      {%csrf_token %}  
+                      <button type="submit" title="Lancer un scan" name="dig_nmap" onclick="md.showNotification_list('bottom','right', 'success', 'Scan lancé')" class="btn btn-success pull-right">Lancer un Dig + Nmap depuis la liste de référence
+                      </button>
+                    </form>
                   </div>
                   <div class="tab-pane" id="ban">
                     <table class="table">
+                      <thead class="text-info">
+                        <th>Nom de l'asset</th>
+                        <th>Type</th>
+                        <th>Vers liste de référence</th> 
+                      </thead>
                       <tbody>
                         {% for ban in list_ban %}
                         <tr>
                           <form action="{% url 'show_controle_continu' %}" method="POST">
                             {%csrf_token %}  
                             <td>{{ ban.name_asset }}</td>
+                            <td>{{ ban.data_type }}</td>
                             <td class="td-actions text-right">
-                              <button type="submit" rel="tooltip" title="Déplacer dans la liste de référence" name="to_list_base" value="{{ ban }}" onclick="md.showNotification_list('bottom','right', 'success', '{{ ban.name_asset }} déplacé dans la liste de référence')" class="btn btn-success btn-link btn-sm">
+                              <button type="submit" rel="tooltip" title="Déplacer dans la liste de référence" name="to_list_base" value="{{ ban.id_asset }}" onclick="md.showNotification_list('bottom','right', 'success', '{{ ban.name_asset }} déplacé dans la liste de référence')" class="btn btn-success btn-link btn-sm">
                                 <i class="material-icons">west</i>
                               </button>
                             </td>
@@ -170,19 +228,21 @@
             <div class="col-lg-4 col-md-12">
                 <div class="card">
                   <div class="card-header card-header-danger">
-                    <h4 class="card-title">Liste des ports ouverts</h4>
+                    <h4 class="card-title">Liste des ports ouverts : {{ list_port|length }}</h4>
                   </div>
                   <div class="card-body table-responsive">
                     <table class="table table-hover">
                       <thead class="text-danger">
                         <th>Numéro de port</th>
                         <th>Protocole</th>
+                        <th>ID de Scan</th> 
                       </thead>
                       <tbody>
                         {% for port in list_port %}
                         <tr>
                           <td>{{ port.num }}</td>
                           <td>{{ port.protocol }}</td>
+                          <td>{{ port.scan }}</td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -190,15 +250,15 @@
                   </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-12">
+            <div class="col-lg-3 col-md-12">
                 <div class="card">
                   <div class="card-header card-header-warning">
-                    <h4 class="card-title">Historique des scans</h4>
+                    <h4 class="card-title">Historique des scans : {{ scan_history|length }} </h4>
                   </div>
                   <div class="card-body table-responsive">
                     <table class="table table-hover">
                       <thead class="text-warning">
-                        <th>ID</th>
+                        <th>ID de Scan</th>
                         <th>Date</th>
                       </thead>
                       <tbody>
@@ -214,8 +274,46 @@
                 </div>
               </div>
           </div>
-    
+
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+{% if task_id %}
+<script>
+  // vanilla JS version
+  document.addEventListener("DOMContentLoaded", function () {
+  var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+  CeleryProgressBar.initProgressBar(progressUrl);
+  });
+</script>
+{% endif %}
+
+<!-- <script>
+  document.querySelector("#refresh").addEventListener("click", event => {
+    console.log('oui')
+
+    let formData = new FormData();
+    formData.append('client_id', {{ client.id_client }});
+
+    let csrfTokenValue = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const request = new Request('{% url "refresh_data" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRFToken': csrfTokenValue},  // On ajoute le token dans l'en-tête
+    });
+
+    fetch(request)
+      .then(response => response.json())
+      .then(result => {
+        console.log(result)
+
+      })
+  })
+</script> -->
+
+
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+
+{% endblock javascripts %}

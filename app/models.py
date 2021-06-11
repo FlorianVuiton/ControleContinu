@@ -12,7 +12,7 @@ class Client(models.Model):
 	id_client 			= models.AutoField(primary_key=True)
 	name_client			= models.CharField(max_length=100)
 	description			= models.CharField(max_length=500, blank=True)
-	logopath 			= models.URLField(blank=True)
+	logoname 			= models.CharField(max_length=100, blank=True)
 
 	def __str__(self):
 		return self.name_client
@@ -22,6 +22,9 @@ class Scan(models.Model):
 	id_scan 			= models.AutoField(primary_key=True)
 	date 				= models.DateField(auto_now_add=True)
 	client 				= models.ForeignKey(Client, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return str(self.id_scan)
 
 
 class Asset(models.Model):

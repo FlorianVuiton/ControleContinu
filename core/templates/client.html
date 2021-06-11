@@ -3,35 +3,91 @@
 {% block title %} Dashboard {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %} <!-- <link href="/static/assets/css/custom.css" rel="stylesheet"/>  -->{% endblock stylesheets %}
 
 {% block content %}
+    <button class="btn btn-round" data-toggle="modal" data-target="#loginModal">
+    Créer un client<i class="material-icons">emoji_people</i>
+    </button>
 
     <div class="row">
-      <div class="col-lg-4 col-md-6 col-sm-6">
       {% for client in clients %}
-        <div class="card card-stats">
-          <div class="card-header card-header-warning card-header-icon">
-            <div class="card-icon">
-              <i class="material-icons">emoji_people</i>
-            </div>
-            <p class="card-category">
-              <h2 style="color:black">Client :</h2>
-            </p>
+      <div class="col-lg-4 col-md-6 col-sm-6">
+        <div class="card card-profile">
+          <div class="image">
+            <img src="/static/assets/img/nsocman.png" alt="...">
+          </div>
+          <div class="card-avatar">
+            <img class="img" src="/static/assets/img/logoclient/{{ client.logoname }}" />
+          </div>
+          <div class="card-body">
             <form action="{% url 'show_controle_continu' %}" method="POST">
               {%csrf_token %}
-              <input type="hidden" name="client_id" value="{{ client.id_client }}">
-              <button type="submit" class="btn btn-success btn-round pull-right">{{ client.name_client }}</button>
-                <!--<a href="{% url 'show_controle_continu' %}" class="btn btn-info">
-                  <h3 class="card-title"> {{ client.name_client}}</h3>
-                </a>-->
+                <button type="submit" class="btn btn-success btn-round text-center">
+                  <h4 class="nomclient"> {{ client.name_client }} </h4>
+                </button>
+                <input type="hidden" name="client_id" value="{{ client.id_client }}">
             </form>
-          </div>
-          <div class="card-footer">
-              <p> description : {{ client.description }}</p>
+            <h5>{{ client.description }}</h5>
           </div>
         </div>
-      {% endfor %}
+      </div>          
+      {% endfor %}  
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1" role="">
+      <div class="modal-dialog modal-login" role="document">
+        <div class="modal-content">
+          <div class="card card-signup card-plain">
+            <form class="form" action="{% url 'show_client' %}" method="POST">
+              {%csrf_token %}
+              <div class="modal-header">
+                <div class="card card-header-primary text-center">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    <i class="material-icons">clear</i>
+                  </button>
+                  <h4 class="card-title">Enregistrer un nouveau client</h4>
+                </div>
+              </div>
+              <div class="modal-body">
+                  <div class="card-body">
+                    <div class="form-group bmd-form-group">
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <div class="input-group-text"><i class="material-icons">business</i></div>
+                        </div>
+                        <!-- <input type="text" class="form-control" placeholder="Nom du client" required> -->
+                        {{ form.name }}
+                      </div>
+                    </div>
+
+                    <div class="form-group bmd-form-group">
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <div class="input-group-text"><i class="material-icons">description</i></div>
+                        </div>
+                        <!-- <input type="text" class="form-control" placeholder="Description"> -->
+                        {{ form.description }}
+                      </div>
+                    </div>
+
+                    <div class="form-group bmd-form-group">
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <div class="input-group-text"><i class="material-icons">insert_photo</i></div>
+                        </div>
+                        <!-- <input type="text" placeholder="Nom du logo" class="form-control"> -->
+                        {{ form.logoname }}
+                      </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="modal-footer justify-content-center">
+                <button type="submit" class="btn btn-success btn-round text-center">Valider</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 
