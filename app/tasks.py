@@ -11,7 +11,6 @@ import requests
 import nmap
 import time
 import sublist3r
-from datetime import datetime
 
 def compare_list(list_ban, list_base, list_delta, list_subdomains, list_ip_entry, scan_db):
 
@@ -71,14 +70,7 @@ def run_sublist3r_scan(self, list_domains, list_ban, list_base, list_base_ip, li
 
 def callback_result(host, scan_result, last_scan, session_key, progress_recorder):
 	# Augmenter la valeur de CONN_MAX_AGE dans settings.py si une erreur est levée
-	now = datetime.now().time() # time object
-	print('#############################')
-	print("begging =", now)
-
 	session_callback = SessionStore(session_key=session_key)
-
-	print('host :', host)
-	print('session callback :', session_callback)
 	
 	try :
 		ports = scan_result['scan'][host]['tcp'].keys()
@@ -90,19 +82,12 @@ def callback_result(host, scan_result, last_scan, session_key, progress_recorder
 			Port.objects.get_or_create(protocol=protocol, num=int(port), scan=last_scan)
 
 	except Exception as e :
-		print('noottt')
-		print('Exception :', e)
-		#MAKE MESSAGE ERREUR
+		pass
 
 	session_callback['current_callback'] += 1
 	session_callback.save()
-	print('current_callback ;', session_callback['current_callback'], 'et total_callback :', session_callback['total_callback'] )
 
 	progress_recorder.set_progress(session_callback['current_callback'], session_callback['total_callback'], description='Nmap en cours')
-
-	now = datetime.now().time() # time object
-	print("end =", now)
-	print('#############################')
 
 
 @shared_task(bind=True)

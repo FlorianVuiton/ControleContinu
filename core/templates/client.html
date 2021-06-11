@@ -17,9 +17,15 @@
           <div class="image">
             <img src="/static/assets/img/nsocman.png" alt="...">
           </div>
+          {%if client.logoname %}
           <div class="card-avatar">
             <img class="img" src="/static/assets/img/logoclient/{{ client.logoname }}" />
           </div>
+          {% else %}
+          <div class="card-avatar">
+            <img class="img" src="/static/assets/img/logoclient/new_logo.png" />
+          </div>
+          {% endif %}
           <div class="card-body">
             <form action="{% url 'show_controle_continu' %}" method="POST">
               {%csrf_token %}

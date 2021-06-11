@@ -10,7 +10,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),          # Django admin route
     path("", include("authentication.urls")), # Auth routes - login / register
     path("", include("app.urls")),             # UI Kits Html files
-    path('celery-progress/', include('celery_progress.urls')),
+    #path('celery-progress/', include('celery_progress.urls')),
 ]
 
 if settings.DEBUG:

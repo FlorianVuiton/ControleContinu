@@ -12,17 +12,16 @@ from django import template
 from django.db.models import Q
 from django.template.response import TemplateResponse
 from django.core import serializers
-
-# from importlib import import_module
-# from django.conf import settings
-# SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 from django.contrib.sessions.models import Session
 
 from celery import current_app 
 
 from .forms import *
-from .scripts.functions import *
 from .tasks import *
+
+import dns.name
+import dns.resolver
+import csv, io
 
 @login_required(login_url="/login/")
 def index(request):
@@ -45,10 +44,7 @@ def pages(request):
 		
 		html_template = loader.get_template( load_template )
 		return HttpResponse(html_template.render(context, request))
-	
-	except:
-		pass
-	"""
+
 	except template.TemplateDoesNotExist:
 
 		html_template = loader.get_template( 'page-404.html' )
@@ -58,7 +54,6 @@ def pages(request):
 	
 		html_template = loader.get_template( 'page-500.html' )
 		return HttpResponse(html_template.render(context, request))
-	"""
 
 @login_required(login_url="/login/")
 def quick_search(request):
@@ -130,7 +125,7 @@ def show_client(request):
 
 	return HttpResponse(html_template.render(context, request))
 
-
+@login_required(login_url="/login/")
 def show_controle_continu(request):
 	context = {}
 
@@ -218,19 +213,11 @@ def show_controle_continu(request):
 		# Enlever tous les doublons
 		publicIP_list_from_dig = list(set(publicIP_list_from_dig))
 
-		print('###################')
-		print('Dig terminé')
-		print('###################')
-
 		# Concatenation de la liste issue du dig et la liste d'ip dans la liste de référence
 		publicIP_list = publicIP_list_from_dig + list_base_ip
 
 		# On enleve les doublons
 		publicIP_list = list(set(publicIP_list))
-
-		print('###################')
-		print(publicIP_list)
-		print('###################')
 
 		# Lancement de nmap dans une task asynchrone
 		result_nmap = run_nmap_scan.delay(publicIP_list, last_scan.id_scan)
@@ -256,11 +243,6 @@ def show_controle_continu(request):
 			result_sublist3r = run_sublist3r_scan.delay(list_domains, list_ban, list_base, list_base_ip, list_delta, scan_db.id_scan)
 
 			info_to_display = "Sublist3r en cours sur "+ str(len(list_domains)) +" domaines : " + ' -- '.join(str(domaine) for domaine in list_domains)
-			print(info_to_display)
-
-			print('###################')
-			print('Sublist3r terminé')
-			print('###################')
 
 			# Puis recharger les nouvelles valeurs (ou pas) de la liste delta
 			list_delta_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='delta', scan__client_id=client_id)
@@ -323,6 +305,40 @@ def refresh_data(request):
 		dict_refresh = {"json_assets" : json_assets, "json_ports" : json_ports}
 
 	return JsonResponse(dict_refresh)
+
+def dig_scan(subdomain):
+    publicIP_list = []
+    try:
+        n = dns.name.from_text(subdomain)
+        answer = dns.resolver.resolve(n,'A')
+        for rdata in answer:
+            publicIP_list.append(rdata.to_text())
+        return publicIP_list
+    except:
+        pass
+
+
+def download_file(list_to_download, file_name):
+
+    if 'port' in file_name:
+        list_to_string = ",".join(list_to_download)
+    else :
+        list_to_string = "\r\n".join(list_to_download)
+
+    buffer = io.StringIO(list_to_string)
+    reader = csv.reader(buffer, skipinitialspace=True)
+
+    buffer = io.StringIO() 
+    wr = csv.writer(buffer,)
+    wr.writerows(reader)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='text/csv')
+
+    response['Content-Disposition'] = 'attachment; filename='+file_name
+
+    return response
+
 
 """
 Empecher le téléchargement des fichiers csv si : ils sont vide, le nmap n'est pas fini
