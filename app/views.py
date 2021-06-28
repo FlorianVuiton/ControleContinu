@@ -19,8 +19,6 @@ from celery import current_app
 from .forms import *
 from .tasks import *
 
-import dns.name
-import dns.resolver
 import csv, io
 
 @login_required(login_url="/login/")
@@ -65,19 +63,18 @@ def quick_search(request):
 			domains = form.cleaned_data['domain']
 			list_domains = domains.split(", ")
 
-			list_subdomains = []
+			# Lancement de sublist3r dans une task asynchrone
+			result = run_sublist3r_scan.delay(list_domains)
 
-			for domain in list_domains:
-				list_subdomains.extend(sublist3r_scan(domain))
-
-			quick_search_dict = {}
-			for subdomain in list_subdomains:
-				quick_search_dict[subdomain] = dig_scan(subdomain)
+			# quick_search_dict = {}
+			# for subdomain in list_subdomains:
+			# 	quick_search_dict[subdomain] = dig_scan(subdomain)
 
 			context =  {
 				'form'  : form,
-				'quick_search_dict'    : quick_search_dict.items(),
+				#'quick_search_dict'    : quick_search_dict.items(),
 				'segment' : 'quick_search',
+				'task_id': result.task_id,
 			}	
 		else:
 			# Form data doesn't match the expected format.
@@ -289,33 +286,41 @@ def change_asset_list(id_asset, list_from, list_to, client_id):
 	log = Log(asset=asset, list_from=list_from, list_to=list_to)
 	log.save()
 
-def refresh_data(request):
-	print(request.POST)
-	if 'client_id' in request.POST:
-		client_id = request.POST.get("client_id")
-		assets = Asset.objects.filter(scan__client_id=client_id)
 
-		last_scan = Scan.objects.filter(client=client_id).last()
-		ports = Port.objects.filter(scan__client_id=client_id, scan=last_scan)
-		print(assets)
-		json_assets = serializers.serialize('json', assets)
-		json_ports = serializers.serialize('json', ports)
-		print(json_ports)
+def get_assets(request):
+	# Request from controlecontinu
+	if request.method == 'POST':
+		if 'client_id' in request.POST:
 
-		dict_refresh = {"json_assets" : json_assets, "json_ports" : json_ports}
+			client_id = request.POST.get("client_id")
+			assets = Asset.objects.filter(scan__client_id=client_id)
 
-	return JsonResponse(dict_refresh)
+			json_assets = serializers.serialize('json', assets)
 
-def dig_scan(subdomain):
-    publicIP_list = []
-    try:
-        n = dns.name.from_text(subdomain)
-        answer = dns.resolver.resolve(n,'A')
-        for rdata in answer:
-            publicIP_list.append(rdata.to_text())
-        return publicIP_list
-    except:
-        pass
+			return JsonResponse(json_assets, safe=False)
+	# Request from quick search
+	else :
+		temp_subdomains = Temp_subdomains.objects.all()
+		json_subdomains = serializers.serialize('json', temp_subdomains)
+
+		return JsonResponse(json_subdomains, safe=False)
+
+def get_ports(request):
+	# Request from controlecontinu
+	if request.method == 'POST':
+		if 'client_id' in request.POST:
+
+			client_id = request.POST.get("client_id")
+			last_scan = Scan.objects.filter(client=client_id).last()
+
+			ports = Port.objects.filter(scan__client_id=client_id, scan=last_scan)
+			json_ports = serializers.serialize('json', ports)
+
+			return JsonResponse(json_ports, safe=False)
+	else :
+		return JsonResponse(None)
+
+	
 
 
 def download_file(list_to_download, file_name):

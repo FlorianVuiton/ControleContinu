@@ -2,11 +2,18 @@
 
 {% block title %} Recherche Rapide {% endblock %} 
 
+{% load static %}
+
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-
+          <div class='progress-wrapper'>
+            <div id='progress-bar' class='progress-bar' style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+          </div>
+          <div id="progress-bar-message" class="text-center">
+            <h3>En attente de lancement d'un scan Sublist3r</h3>
+          </div>
           <div class="row">
             <div class="col-md-8 offset-md-2">
               <div class="card">
@@ -28,7 +35,7 @@
                     <div class="clearfix"></div>
                   </form>
                 </div>
-                <div>
+<!--                 <div>
                   <ul>
                   {% for key,values in quick_search_dict %}
                     <li> {{ key }} </li>
@@ -39,10 +46,90 @@
                       </ul>
                   {% endfor %}
                   </ul>
+                </div> -->
+              </div>
+            </div>
+            <div class="col-md-2">
+              <span class="input-group-btn">
+                <button id="refresh" type="submit" class="btn btn-round btn-default">
+                  <i class="material-icons">refresh</i>
+                </button>  
+              </span>
+            </div>  
+          </div>
+          <div class="=row">
+            <div class="col-md-4 offset-md-2">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Résultats</h4>
+                </div>
+                <div class="card-body">
+                  <p id="showData"></p>
                 </div>
               </div>
             </div>
           </div>
+
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+{% if task_id %}
+<script>
+  // vanilla JS version
+  document.addEventListener("DOMContentLoaded", function () {
+  var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+  CeleryProgressBar.initProgressBar(progressUrl);
+  });
+
+{% endif %}
+</script>
+<script>
+  document.querySelector("#refresh").addEventListener("click", event => {
+    const request = new Request('{% url "get_assets" %}', {
+        method: 'GET',
+    });
+
+    fetch(request)
+      .then(response => response.json())
+      .then(result => {
+        // Convert as javascript object
+        let subdomains = JSON.parse(result)
+
+        // Create Headers 
+        let col = [];
+        col.push("Sous domaine")
+        col.push("Ip associée")        
+
+        // CREATE DYNAMIC TABLE.
+        let table = document.createElement("table");
+        table.setAttribute('class',"table");
+
+        // CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+        let tr = table.insertRow(-1);                   // TABLE ROW.
+
+        for (let i = 0; i < col.length; i++) {
+            let th = document.createElement("th");      // TABLE HEADER.
+            th.innerHTML = col[i];
+            tr.appendChild(th);
+        }
+
+        // ADD JSON DATA TO THE TABLE AS ROWS.
+        for (let i = 0; i < subdomains.length; i++) {
+          tr = table.insertRow(-1);
+          let tabCell = tr.insertCell(-1);
+          tabCell.innerHTML = subdomains[i].fields.name;
+          let tabCell2 = tr.insertCell(-1);
+          tabCell2.innerHTML = subdomains[i].fields.ip;
+        }
+
+        // FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.
+        let divContainer = document.getElementById("showData");
+        divContainer.innerHTML = "";
+        divContainer.appendChild(table);
+      })
+      .catch(function(error) {
+        console.log('Il y a eu un problème avec l\'opération fetch: ' + error.message);
+      });
+  })
+</script>
 
 
 {% endblock content %}

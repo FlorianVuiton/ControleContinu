@@ -11,6 +11,8 @@ import requests
 import nmap
 import time
 import sublist3r
+import dns.name
+import dns.resolver
 
 def compare_list(list_ban, list_base, list_delta, list_subdomains, list_ip_entry, scan_db):
 
@@ -35,6 +37,18 @@ def compare_list(list_ban, list_base, list_delta, list_subdomains, list_ip_entry
 		log.save()
 
 
+def dig_scan(subdomain):
+    publicIP_list = []
+    try:
+        n = dns.name.from_text(subdomain)
+        answer = dns.resolver.resolve(n,'A')
+        for rdata in answer:
+            publicIP_list.append(rdata.to_text())
+        return publicIP_list
+    except:
+        pass
+
+
 def sublist3r_scan(domain):
     subdomains = sublist3r.main(domain, 40, savefile=None, ports=None, silent=True, verbose=False, enable_bruteforce=False, engines=None)
 
@@ -42,12 +56,10 @@ def sublist3r_scan(domain):
 
 
 @shared_task(bind=True)
-def run_sublist3r_scan(self, list_domains, list_ban, list_base, list_base_ip, list_delta, scan_id):
+def run_sublist3r_scan(self, list_domains, list_ban = None, list_base = None, list_base_ip = None, list_delta = None, scan_id = None):
 	#Instanciation de la barre de progression
 	progress_recorder = ProgressRecorder(self)
 
-	#On recupére l'objet scan (de la BDD) depuis son ID
-	new_scan = Scan.objects.get(pk=scan_id)
 
 	list_subdomains = []
 	list_ip_entry = []
@@ -56,15 +68,33 @@ def run_sublist3r_scan(self, list_domains, list_ban, list_base, list_base_ip, li
 		# Check si la ligne n'est pas une IPv4 ou IPv6
 		if ipv4_address.match(domain) == None and ipv6_address.match(domain) == None:
 			list_subdomains.extend(sublist3r_scan((domain)))
+
 		else:
 			list_ip_entry.append(domain)
 
 		progress_recorder.set_progress(index + 1, len(list_domains), description='Sublist3r en cours')
 
-	# Comparer les sous-domaines trouvés et les IP d'entrées avec les trois listes et ajouter les différences dans la liste delta
-	compare_list(list_ban, list_base + list_base_ip, list_delta, list_subdomains, list_ip_entry, new_scan)
+	# Ajout des données dans la base si ce n'est pas une recherche rapide
+	if scan_id != None :
+		#On recupére l'objet scan (de la BDD) depuis son ID
+		new_scan = Scan.objects.get(pk=scan_id)
 
-	# requests.get(reverse('app.views.show_controle_continu'))
+		# Comparer les sous-domaines trouvés et les IP d'entrées avec les trois listes et ajouter les différences dans la liste delta
+		compare_list(list_ban, list_base + list_base_ip, list_delta, list_subdomains, list_ip_entry, new_scan)
+	else :
+		# Delete previous subdomains from database
+		Temp_subdomains.objects.all().delete()
+
+		public_IP = []
+		for subdomain in list_subdomains:
+			public_IP = dig_scan(subdomain)
+
+			if isinstance(public_IP, list):
+				public_IP = ' -- '.join(public_IP)
+
+			# Save the subdomains in a temporary database
+			temp_subdomains = Temp_subdomains(name=subdomain, ip=public_IP)
+			temp_subdomains.save()
 
 	return "Sublist3r effectué avec succès"
 

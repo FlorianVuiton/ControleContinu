@@ -71,4 +71,12 @@ class Log(models.Model):
 	list_from			= models.CharField(max_length=5, choices=LIST_CHOICE)
 	list_to 			= models.CharField(max_length=5, choices=LIST_CHOICE)
 	date 				= models.DateField(auto_now=True)
+
+class Temp_subdomains(models.Model):
+	id_temp_subdomains 	= models.AutoField(primary_key=True)
+	name				= models.CharField(max_length=100)
+	ip 					= models.CharField(max_length=100, null=True, blank=True)
+
+	def __str__(self):
+		return self.name
 		

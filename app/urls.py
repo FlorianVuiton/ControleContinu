@@ -14,7 +14,8 @@ urlpatterns = [
     path('quick_search.html/', views.quick_search, name='quick_search'),
     path('client.html/', views.show_client, name='show_client'),
     path('controlecontinu.html/', views.show_controle_continu, name='show_controle_continu'),
-    path('refresh_data/', views.refresh_data, name="refresh_data"),
+    path('get_assets/', views.get_assets, name="get_assets"),
+    path('get_ports/', views.get_ports, name="get_ports"),
     path('celery-progress/', include('celery_progress.urls')),
 
     # Matches any html file

@@ -30,3 +30,5 @@ staticfiles/*
 # redis
 *.rdb
 redis-stable/*
+
+django_deploy.ctb

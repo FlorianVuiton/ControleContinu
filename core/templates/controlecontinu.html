@@ -295,21 +295,38 @@
 
     let csrfTokenValue = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    const request = new Request('{% url "refresh_data" %}', {
+    const request_assets = new Request('{% url "get_assets" %}', {
         method: 'POST',
         body: formData,
         headers: {'X-CSRFToken': csrfTokenValue},  // On ajoute le token dans l'en-tête
     });
 
-    fetch(request)
+    const request_ports = new Request('{% url "get_ports" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRFToken': csrfTokenValue},  // On ajoute le token dans l'en-tête
+    });
+
+    fetch(request_assets)
+      .then(response => response.json())
+      .then(result => {
+        // Convert as javascript object
+        let data = JSON.parse(result)
+
+        console.log(data)
+      })
+
+    fetch(request_ports)
       .then(response => response.json())
       .then(result => {
         console.log(result)
+        // Convert as javascript object
+        let data = JSON.parse(result)
 
+        console.log(data)
       })
   })
 </script> -->
-
 
 {% endblock content %}
 
