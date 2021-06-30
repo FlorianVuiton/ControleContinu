@@ -16,6 +16,7 @@ urlpatterns = [
     path('controlecontinu.html/', views.show_controle_continu, name='show_controle_continu'),
     path('get_assets/', views.get_assets, name="get_assets"),
     path('get_ports/', views.get_ports, name="get_ports"),
+    path('get_scans/', views.get_scans, name="get_scans"),
     path('celery-progress/', include('celery_progress.urls')),
 
     # Matches any html file

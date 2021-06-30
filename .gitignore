@@ -32,3 +32,4 @@ staticfiles/*
 redis-stable/*
 
 django_deploy.ctb
+conf_serveur/

@@ -31,7 +31,7 @@
                         </div>
                       </div>
                     </div>
-                    <button type="submit" class="btn btn-success pull-right">Lancer</button>
+                    <button type="submit" class="btn btn-success pull-right" onclick="toRefresh=true;">Lancer</button>
                     <div class="clearfix"></div>
                   </form>
                 </div>
@@ -78,8 +78,26 @@
   var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
   CeleryProgressBar.initProgressBar(progressUrl);
   });
-
+</script>
 {% endif %}
+
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.3/src/ResizeSensor.js"></script>
+
+<script>
+     // vanil
+     toRefresh=true;
+     var pBar = document.getElementById("progress-bar");
+     new ResizeSensor(jQuery('#progress-bar'), function(){
+         if (pBar.style.width=="100%" && toRefresh){
+             $("#refresh").click();
+             toRefresh=false;
+         }
+     });
 </script>
 <script>
   document.querySelector("#refresh").addEventListener("click", event => {

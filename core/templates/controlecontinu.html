@@ -8,7 +8,6 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-            
           <div class="row">
             <div class="tim-typo col-lg-8 col-md-8">
               <h1>Controle Continu de {{ client.name_client }} </h1>
@@ -74,7 +73,7 @@
                         </div>
                       </div>
                     </div>
-                    <button type="submit" class="btn btn-success pull-right" name="sublist3r">Lancer Sublist3r</button>
+                    <button type="submit" class="btn btn-success pull-right" name="sublist3r" onclick="toRefresh=true;">Lancer Sublist3r</button>
                     <div class="clearfix"></div>
                   </form>
                 </div>
@@ -82,13 +81,13 @@
             </div>
             <div class="col-md-2">
               <span class="input-group-btn">
-                <form action="{% url 'show_controle_continu' %}" method="POST">
-                  {%csrf_token %}
+                <!-- <form action="{% url 'show_controle_continu' %}" method="POST">
+                  {%csrf_token %} -->
                   <button id="refresh" type="submit" class="btn btn-round btn-default">
                     <i class="material-icons">refresh</i>
                   </button>
-                  <input type="hidden" name="client_id" value="{{ client.id_client }}">
-                </form>    
+                 <!--  <input type="hidden" name="client_id" value="{{ client.id_client }}">
+                </form>   -->  
               </span>
             </div>  
           </div>
@@ -102,19 +101,19 @@
                     <ul class="nav nav-tabs" data-tabs="tabs">
                       <li class="nav-item">
                         <a class="nav-link active" href="#delta" data-toggle="tab">
-                          <i class="material-icons">change_history</i> Liste Delta : {{ list_delta|length }}
+                          <i class="material-icons">change_history</i> Liste Delta : <span id="nb_delta">{{ list_delta|length }}</span>
                           <div class="ripple-container"></div>
                         </a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link" href="#base" data-toggle="tab">
-                          <i class="material-icons">playlist_add_check</i> Liste Référence : {{ list_base|length }}
+                          <i class="material-icons">playlist_add_check</i> Liste Référence : <span id="nb_base"> {{ list_base|length }}</span>
                           <div class="ripple-container"></div>
                         </a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link" href="#ban" data-toggle="tab">
-                          <i class="material-icons">cancel</i> Liste Exclusion : {{ list_ban|length }}
+                          <i class="material-icons">cancel</i> Liste Exclusion : <span id="nb_ban"> {{ list_ban|length }} </span>
                           <div class="ripple-container"></div>
                         </a>
                       </li>
@@ -127,7 +126,7 @@
                   <div class="tab-pane active" id="delta">
                     <form action="{% url 'show_controle_continu' %}" method="POST">
                       {%csrf_token %}
-                      <table class="table"> 
+                      <table class="table" id="table_delta"> 
                         <thead class="text-info">
                           <th>Nom de l'asset</th>
                           <th>Type</th>
@@ -167,7 +166,7 @@
                     </form>
                   </div>
                   <div class="tab-pane" id="base">
-                    <table class="table">
+                    <table class="table" id="table_base">
                       <thead class="text-info">
                         <th>Nom de l'asset</th>
                         <th>Type</th>
@@ -197,7 +196,7 @@
                     </form>
                   </div>
                   <div class="tab-pane" id="ban">
-                    <table class="table">
+                    <table class="table" id="table_ban">
                       <thead class="text-info">
                         <th>Nom de l'asset</th>
                         <th>Type</th>
@@ -228,10 +227,10 @@
             <div class="col-lg-4 col-md-12">
                 <div class="card">
                   <div class="card-header card-header-danger">
-                    <h4 class="card-title">Liste des ports ouverts : {{ list_port|length }}</h4>
+                    <h4 class="card-title">Liste des ports ouverts : <span id="nb_port"> {{ list_port|length }} </span></h4>
                   </div>
                   <div class="card-body table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover" id="table_port">
                       <thead class="text-danger">
                         <th>Numéro de port</th>
                         <th>Protocole</th>
@@ -253,10 +252,10 @@
             <div class="col-lg-3 col-md-12">
                 <div class="card">
                   <div class="card-header card-header-warning">
-                    <h4 class="card-title">Historique des scans : {{ scan_history|length }} </h4>
+                    <h4 class="card-title">Historique des scans : <span id="nb_scan"> {{ scan_history|length }} </span></h4>
                   </div>
                   <div class="card-body table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover" id="table_scan">
                       <thead class="text-warning">
                         <th>ID de Scan</th>
                         <th>Date</th>
@@ -286,9 +285,27 @@
 </script>
 {% endif %}
 
-<!-- <script>
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.3/src/ResizeSensor.js"></script>
+
+<script>
+     // vanil
+     toRefresh=true;
+     var pBar = document.getElementById("progress-bar");
+     new ResizeSensor(jQuery('#progress-bar'), function(){
+         if (pBar.style.width=="100%" && toRefresh){
+             $("#refresh").click();
+             toRefresh=false;
+         }
+     });
+</script>
+
+<script>
   document.querySelector("#refresh").addEventListener("click", event => {
-    console.log('oui')
 
     let formData = new FormData();
     formData.append('client_id', {{ client.id_client }});
@@ -307,26 +324,117 @@
         headers: {'X-CSRFToken': csrfTokenValue},  // On ajoute le token dans l'en-tête
     });
 
+    const request_scans = new Request('{% url "get_scans" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRFToken': csrfTokenValue},  // On ajoute le token dans l'en-tête
+    });
+
     fetch(request_assets)
       .then(response => response.json())
       .then(result => {
-        // Convert as javascript object
-        let data = JSON.parse(result)
+         // Convert as javascript object
+         var delta = document.getElementById("table_delta");
+         var base = document.getElementById("table_base");
+         var ban = document.getElementById("table_ban");
 
-        console.log(data)
+         $("#table_base").find('tbody').empty();
+         $("#table_delta").find('tbody').empty();
+         $("#table_ban").find('tbody').empty();
+
+        var nbD = 0;
+        var nbBan = 0;
+        var nbBas = 0;
+
+        let data = JSON.parse(result)
+        Object.entries(data).forEach((entry) => {
+          const [key, value] = entry;
+
+          if (value["fields"]["list_status"] == "delta"){
+          var row = delta.children[1].insertRow(0);
+          cellContent='<div class="form-check form-check-radio form-check-inline"> <label class="form-check-label"> <input class="form-check-input" type="radio" name="radio_'+value["pk"]+'" id="inlineRadio1" value="to_base"> <i style="color:green;" class="material-icons">check</i> <span class="circle"> <span class="check"></span> </span> </label> </div> <div class="form-check form-check-radio form-check-inline"> <label class="form-check-label"> <input class="form-check-input" type="radio" name="radio_'+value["pk"]+'" id="inlineRadio2" value="to_ban"> <i style="color:red;" class="material-icons">close</i> <span class="circle"> <span class="check"></span> </span> </label> </div>';
+            nbD+=1;
+          }
+          else if (value["fields"]["list_status"] == "base"){
+            var row = base.children[1].insertRow(0);
+            cellContent='<button type="submit" rel="tooltip" title="" name="to_list_ban" value="26" onclick="md.showNotification_list(\'bottom\',\'right\', \'danger\', \'rds.cciconseils.fr déplacé dans la liste de référence\')" class="btn btn-danger btn-link btn-sm" data-original-title="Déplacer dans la liste d\'exclusion"> <i class="material-icons">east</i> <div class="ripple-container"></div></button>';
+            nbBas+=1;
+            }
+          else if (value["fields"]["list_status"] == "ban"){
+            var row = ban.children[1].insertRow(0);
+            cellContent='<button type="submit" rel="tooltip" title="" name="to_list_base" value="27" onclick="md.showNotification_list(\'bottom\',\'right\', \'success\', \'srvdc.cciconseils.fr déplacé dans la liste de référence\')" class="btn btn-success btn-link btn-sm" data-original-title="Déplacer dans la liste de référence"> <i class="material-icons">west</i> <div class="ripple-container"></div></button>';
+            nbBan+=1;
+          }
+          
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          cell1.innerHTML = value["fields"]["name_asset"];
+          cell2.innerHTML = value["fields"]["data_type"];
+          cell3.setAttribute("class", "td-actions text-right");
+          cell3.innerHTML = cellContent; 
+        });
+        document.getElementById("nb_delta").innerHTML = nbD;
+        document.getElementById("nb_base").innerHTML = nbBas;
+        document.getElementById("nb_ban").innerHTML = nbBan;
       })
 
     fetch(request_ports)
       .then(response => response.json())
       .then(result => {
-        console.log(result)
         // Convert as javascript object
         let data = JSON.parse(result)
+        let table = document.getElementById("table_port");
 
-        console.log(data)
+        $("#table_port").find('tbody').empty(); 
+
+        var nbPort = 0;
+
+        Object.entries(data).forEach((entry) => {
+          const [key, value] = entry;
+          let row = table.children[1].insertRow(0);
+          let cell1 = row.insertCell(0);
+          let cell2 = row.insertCell(1);
+          let cell3 = row.insertCell(2);
+          cell1.innerHTML = value["fields"]["num"];
+          cell2.innerHTML = value["fields"]["protocol"];
+          cell3.innerHTML = value["fields"]["scan"];
+
+          nbPort += 1;
+        });
+        document.getElementById("nb_port").innerHTML = nbPort;
+
+      })
+
+    fetch(request_scans)
+      .then(response => response.json())
+      .then(result => {
+        // Convert as javascript object
+        let data = JSON.parse(result);
+        let table = document.getElementById("table_scan");
+
+        $("#table_scan").find('tbody').empty();
+
+        let nbScan = 0;
+
+        Object.entries(data).forEach((entry) => {
+          const [key, value] = entry;
+          let row = table.children[1].insertRow(0);
+          let cell1 = row.insertCell(0);
+          let cell2 = row.insertCell(1);
+          cell1.innerHTML = value["pk"];
+
+          const event = new Date(value["fields"]["date"]+" 00:00:00");
+          const options = { day: 'numeric', month: 'long', year: 'numeric' };
+          cell2.innerHTML = event.toLocaleDateString('fr-FR', options);
+
+          nbScan += 1;
+        });
+        document.getElementById("nb_scan").innerHTML = nbScan;
+ 
       })
   })
-</script> -->
+</script>
 
 {% endblock content %}
 

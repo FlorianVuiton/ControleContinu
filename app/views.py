@@ -66,13 +66,8 @@ def quick_search(request):
 			# Lancement de sublist3r dans une task asynchrone
 			result = run_sublist3r_scan.delay(list_domains)
 
-			# quick_search_dict = {}
-			# for subdomain in list_subdomains:
-			# 	quick_search_dict[subdomain] = dig_scan(subdomain)
-
 			context =  {
 				'form'  : form,
-				#'quick_search_dict'    : quick_search_dict.items(),
 				'segment' : 'quick_search',
 				'task_id': result.task_id,
 			}	
@@ -163,24 +158,24 @@ def show_controle_continu(request):
 
 	# Requête SQL de la liste d'exclusion:
 	# SELECT * FROM `app_asset` INNER JOIN `app_scan` ON (`app_asset`.`scan_id` = `app_scan`.`id_scan`) WHERE (`app_asset`.`data_type` = subdom AND `app_asset`.`list_status` = ban AND `app_scan`.`client_id` = client_id)
-	list_ban_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='ban', scan__client_id=client_id)
+	list_ban_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='ban', scan__client_id=client_id).order_by('-data_type', 'name_asset')
 	
 	# Requête SQL de la liste de référence:
 	# SELECT * FROM `app_asset` INNER JOIN `app_scan` ON (`app_asset`.`scan_id` = `app_scan`.`id_scan`) WHERE ((`app_asset`.`data_type` = subdom OR `app_asset`.`data_type` = ip) AND `app_asset`.`list_status` = base AND `app_scan`.`client_id` = 1)
-	list_base_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='base', scan__client_id=client_id)
+	list_base_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='base', scan__client_id=client_id).order_by('-data_type', 'name_asset')
 
 	# Requête SQL de la liste de delta:
 	# SELECT * FROM `app_asset` INNER JOIN `app_scan` ON (`app_asset`.`scan_id` = `app_scan`.`id_scan`) WHERE (`app_asset`.`data_type` = subdom AND `app_asset`.`list_status` = delta AND `app_scan`.`client_id` = client_id)
-	list_delta_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='delta', scan__client_id=client_id)
+	list_delta_queryset = Asset.objects.filter(Q(data_type='subdom') | Q(data_type='ip'), list_status='delta', scan__client_id=client_id).order_by('-data_type', 'name_asset')
 
 	# Recherche le dernier scan effectué
 	last_scan = Scan.objects.filter(client=client_id).last()
 
 	#Requête SQL de la liste de port du dernier scan:
-	list_port_queryset = Port.objects.filter(scan__client_id=client_id, scan=last_scan)
+	list_port_queryset = Port.objects.filter(scan__client_id=client_id, scan=last_scan).order_by('num')
 
 	# Requete SQL sur la table Scan
-	scan_queryset = Scan.objects.filter(client_id=client_id)
+	scan_queryset = Scan.objects.filter(client_id=client_id).order_by('-id_scan')
 
 	# Recherche du client en fonction de son id
 	client = Client.objects.get(id_client=client_id)
@@ -293,8 +288,8 @@ def get_assets(request):
 		if 'client_id' in request.POST:
 
 			client_id = request.POST.get("client_id")
-			assets = Asset.objects.filter(scan__client_id=client_id)
 
+			assets = Asset.objects.filter(scan__client_id=client_id).order_by('data_type', '-name_asset')
 			json_assets = serializers.serialize('json', assets)
 
 			return JsonResponse(json_assets, safe=False)
@@ -313,10 +308,24 @@ def get_ports(request):
 			client_id = request.POST.get("client_id")
 			last_scan = Scan.objects.filter(client=client_id).last()
 
-			ports = Port.objects.filter(scan__client_id=client_id, scan=last_scan)
+			ports = Port.objects.filter(scan__client_id=client_id, scan=last_scan).order_by('-num')
 			json_ports = serializers.serialize('json', ports)
 
 			return JsonResponse(json_ports, safe=False)
+	else :
+		return JsonResponse(None)
+
+def get_scans(request):
+	# Request from controlecontinu
+	if request.method == 'POST':
+		if 'client_id' in request.POST:
+
+			client_id = request.POST.get("client_id")
+
+			scan = Scan.objects.filter(client_id=client_id).order_by('id_scan')
+			json_scan = serializers.serialize('json', scan)
+
+			return JsonResponse(json_scan, safe=False)
 	else :
 		return JsonResponse(None)
 
