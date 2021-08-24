@@ -49,17 +49,16 @@ def dig_scan(subdomain):
         pass
 
 
-def sublist3r_scan(domain):
-    subdomains = sublist3r.main(domain, 40, savefile=None, ports=None, silent=True, verbose=False, enable_bruteforce=False, engines=None)
+def sublist3r_scan(domain, is_bruteforced):
+    subdomains = sublist3r.main(domain, 40, savefile=None, ports=None, silent=True, verbose=False, enable_bruteforce=is_bruteforced, engines=None)
 
     return subdomains
 
 
 @shared_task(bind=True)
-def run_sublist3r_scan(self, list_domains, list_ban = None, list_base = None, list_base_ip = None, list_delta = None, scan_id = None):
+def run_sublist3r_scan(self, list_domains, is_bruteforced = True, list_ban = None, list_base = None, list_base_ip = None, list_delta = None, scan_id = None):
 	#Instanciation de la barre de progression
 	progress_recorder = ProgressRecorder(self)
-
 
 	list_subdomains = []
 	list_ip_entry = []
@@ -67,7 +66,7 @@ def run_sublist3r_scan(self, list_domains, list_ban = None, list_base = None, li
 	for index, domain in enumerate(list_domains):
 		# Check si la ligne n'est pas une IPv4 ou IPv6
 		if ipv4_address.match(domain) == None and ipv6_address.match(domain) == None:
-			list_subdomains.extend(sublist3r_scan((domain)))
+			list_subdomains.extend(sublist3r_scan(domain, is_bruteforced))
 
 		else:
 			list_ip_entry.append(domain)

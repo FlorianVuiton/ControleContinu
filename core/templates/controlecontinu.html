@@ -71,6 +71,15 @@
                               </span>
                           </div>
                         </div>
+                        <div class="form-check">
+                          <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" name="bruteforce">
+                            Bruteforcer les sous-domaines
+                            <span class="form-check-sign">
+                              <span class="check"></span>
+                            </span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                     <button type="submit" class="btn btn-success pull-right" name="sublist3r" onclick="toRefresh=true;">Lancer Sublist3r</button>
@@ -191,7 +200,7 @@
                     </table>
                       <form action="{% url 'show_controle_continu' %}" method="POST">
                       {%csrf_token %}  
-                      <button type="submit" title="Lancer un scan" name="dig_nmap" onclick="md.showNotification_list('bottom','right', 'success', 'Scan lancé')" class="btn btn-success pull-right">Lancer un Dig + Nmap depuis la liste de référence
+                      <button type="submit" title="Lancer un scan" name="dig_nmap" onclick="md.showNotification_list('bottom','right', 'success', 'Scan lancé')" class="btn btn-success pull-right" onclick="toRefresh=true;">Lancer un Dig + Nmap depuis la liste de référence
                       </button>
                     </form>
                   </div>

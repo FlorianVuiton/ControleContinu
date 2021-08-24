@@ -9,6 +9,13 @@ class QuickSearchForm(forms.Form):
         required=True,
         )
 
+    bruteforce = forms.BooleanField(
+        label='Bruteforcer les sous-domaine',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        )
+
+
 class CreateClientForm(forms.Form):
     name = forms.CharField(
     	label='nom du client',

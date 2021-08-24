@@ -63,8 +63,13 @@ def quick_search(request):
 			domains = form.cleaned_data['domain']
 			list_domains = domains.split(", ")
 
+			bruteforce = False
+			# Bruterforcer les domaines
+			if request.POST.get('bruteforce', False) :
+				bruteforce = True
+
 			# Lancement de sublist3r dans une task asynchrone
-			result = run_sublist3r_scan.delay(list_domains)
+			result = run_sublist3r_scan.delay(list_domains, bruteforce)
 
 			context =  {
 				'form'  : form,
@@ -227,12 +232,18 @@ def show_controle_continu(request):
 			scan_db = Scan(client=client)
 			scan_db.save()
 			list_domains = []
+			bruteforce = False
+
 			for line in file_lines:
 				# Convertir bytes-like object into string
 				list_domains.append(line.decode().replace('\r', '').replace('\n', ''))
+
+			# Bruterforcer les domaines
+			if request.POST.get('bruteforce', False) :
+				bruteforce = True
 			
 			# Lancement de sublist3r dans une task asynchrone
-			result_sublist3r = run_sublist3r_scan.delay(list_domains, list_ban, list_base, list_base_ip, list_delta, scan_db.id_scan)
+			result_sublist3r = run_sublist3r_scan.delay(list_domains, bruteforce, list_ban, list_base, list_base_ip, list_delta, scan_db.id_scan)
 
 			info_to_display = "Sublist3r en cours sur "+ str(len(list_domains)) +" domaines : " + ' -- '.join(str(domaine) for domaine in list_domains)
 
@@ -360,8 +371,9 @@ Message d'erreur si le dig ou nmap ne renvoie rien
 Réchargement tableau des ports
 Ajouter les domaines du fichiers d'entrée du la BDD
 Dans la lsite de téléchargement des sous-domaines, enlever les doublons IP assoscié au sous-domaine et sous-domaine
-Verification que le nmap tourne sur le serveur (avec les callbacks) : fermeture de session, eteindre ordi, ....
+
 """
 
-# Recharger les données avec Ajax
+# 1 : RADIO BUTTON POUR ACTIVER OU NON SUBRUTE (SUBLIST3R)
+# 2 : SE RENSEIGNER SUR SUBBRUTE
 

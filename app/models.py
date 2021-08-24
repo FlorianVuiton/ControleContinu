@@ -30,7 +30,6 @@ class Scan(models.Model):
 class Asset(models.Model):
 	DATA_TYPE_CHOICE 	= [
 		('ip', 'publicIP'),
-		('dom', 'domain'),
 		('subdom', 'subdomain'),
 	]
 
