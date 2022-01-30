@@ -20,7 +20,7 @@ DEBUG = config('DEBUG', cast=bool)
 # DEBUG = True
 
 # load production server from .env
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.20', '192.168.1.32', '192.168.130.99'] #, config('SERVER', default='127.0.0.1')]
+ALLOWED_HOSTS = [config('SERVER', default='127.0.0.1')]
 
 # Application definition
 
@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_results',
     'celery_progress',
-    'debug_toolbar',
+    #'debug_toolbar',
     'app',  # Enable the inner app 
 ]
 
@@ -46,7 +46,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 INTERNAL_IPS = ['127.0.0.1']
